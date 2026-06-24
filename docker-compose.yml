@@ -1,0 +1,30 @@
+version: '3.8'
+
+services:
+  account:
+    build: ./services/account
+    ports:
+      - 3001:3001
+    environment:
+      - PORT=3001
+
+  loan:
+    build: ./services/loan
+    ports:
+      - 3002:3002
+    environment:
+      - PORT=3002
+
+  transaction:
+    build: ./services/transaction
+    ports:
+      - 3003:3003
+    environment:
+      - PORT=3003
+
+  ui:
+    build: ./services/ui
+    ports:
+      - 3000:3000
+    environment:
+      - PORT=3000

@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Simple Banking App UI</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 0; padding: 0; background: #f4f6f8; color: #1f2937; }
+    header { background: #0f172a; color: white; padding: 20px; text-align: center; }
+    main { padding: 20px; max-width: 1100px; margin: 0 auto; }
+    section { background: white; border-radius: 12px; box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08); margin-bottom: 24px; padding: 20px; }
+    h2 { margin-top: 0; }
+    .columns { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }
+    label { display: block; margin-bottom: 8px; font-weight: 600; }
+    input, select, button { width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px; }
+    button { background: #0f172a; color: white; cursor: pointer; margin-top: 10px; border: none; }
+    button:hover { background: #1e293b; }
+    .small { font-size: 13px; color: #475569; margin-top: 4px; }
+    table { width: 100%; border-collapse: collapse; margin-top: 12px; }
+    th, td { padding: 10px; text-align: left; border-bottom: 1px solid #e2e8f0; }
+    th { background: #f8fafc; }
+    pre { background: #f8fafc; padding: 12px; overflow: auto; border-radius: 8px; }
+    .status { color: #0f172a; font-weight: 700; }
+  </style>
+</head>
+<body>
+<header>
+  <h1>Simple Banking App UI</h1>
+  <p>Manage accounts, loans, and transactions from a single interface.</p>
+</header>
+<main>
+  <section>
+    <h2>Service status</h2>
+    <div class="columns">
+      <div><strong>Account</strong>: <span id="account-status">checking…</span></div>
+      <div><strong>Loan</strong>: <span id="loan-status">checking…</span></div>
+      <div><strong>Transaction</strong>: <span id="transaction-status">checking…</span></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Create account</h2>
+    <div class="columns">
+      <div>
+        <label for="account-id">Account ID</label>
+        <input id="account-id" placeholder="a1" />
+      </div>
+      <div>
+        <label for="account-name">Name</label>
+        <input id="account-name" placeholder="Alice" />
+      </div>
+      <div>
+        <label for="account-balance">Balance</label>
+        <input id="account-balance" type="number" value="0" />
+      </div>
+    </div>
+    <button id="create-account-btn">Create account</button>
+    <p class="small">Use this account for loans and transactions.</p>
+  </section>
+
+  <section>
+    <h2>Request loan</h2>
+    <div class="columns">
+      <div>
+        <label for="loan-id">Loan ID</label>
+        <input id="loan-id" placeholder="l1" />
+      </div>
+      <div>
+        <label for="loan-account-id">Account ID</label>
+        <input id="loan-account-id" placeholder="a1" />
+      </div>
+      <div>
+        <label for="loan-amount">Amount</label>
+        <input id="loan-amount" type="number" value="1000" />
+      </div>
+      <div>
+        <label for="loan-term">Term (months)</label>
+        <input id="loan-term" type="number" value="12" />
+      </div>
+    </div>
+    <button id="create-loan-btn">Request loan</button>
+  </section>
+
+  <section>
+    <h2>Record transaction</h2>
+    <div class="columns">
+      <div>
+        <label for="transaction-id">Transaction ID</label>
+        <input id="transaction-id" placeholder="t1" />
+      </div>
+      <div>
+        <label for="transaction-account-id">Account ID</label>
+        <input id="transaction-account-id" placeholder="a1" />
+      </div>
+      <div>
+        <label for="transaction-type">Type</label>
+        <select id="transaction-type">
+          <option value="deposit">deposit</option>
+          <option value="withdrawal">withdrawal</option>
+        </select>
+      </div>
+      <div>
+        <label for="transaction-amount">Amount</label>
+        <input id="transaction-amount" type="number" value="100" />
+      </div>
+      <div>
+        <label for="transaction-description">Description</label>
+        <input id="transaction-description" placeholder="Payment, refund, etc." />
+      </div>
+    </div>
+    <button id="create-transaction-btn">Record transaction</button>
+  </section>
+
+  <section>
+    <h2>Data explorer</h2>
+    <div class="columns">
+      <div>
+        <button id="load-accounts">Load accounts</button>
+      </div>
+      <div>
+        <button id="load-loans">Load loans</button>
+      </div>
+      <div>
+        <button id="load-transactions">Load transactions</button>
+      </div>
+    </div>
+    <div id="data-output"></div>
+  </section>
+</main>
+<script>
+const locations = {
+  account: 'http://localhost:3001',
+  loan: 'http://localhost:3002',
+  transaction: 'http://localhost:3003'
+};
+
+const statusElems = {
+  account: document.getElementById('account-status'),
+  loan: document.getElementById('loan-status'),
+  transaction: document.getElementById('transaction-status')
+};
+
+async function checkStatus() {
+  const endpoints = {
+    account: 'accounts',
+    loan: 'loans',
+    transaction: 'transactions'
+  };
+
+  for (const [name, base] of Object.entries(locations)) {
+    try {
+      const res = await fetch(`${base}/${endpoints[name]}`);
+      statusElems[name].innerText = res.ok ? 'online' : `error ${res.status}`;
+      statusElems[name].className = 'status';
+    } catch (error) {
+      statusElems[name].innerText = 'offline';
+      statusElems[name].className = 'status';
+    }
+  }
+}
+
+function showOutput(title, data) {
+  const output = document.getElementById('data-output');
+  output.innerHTML = `
+    <h3>${title}</h3>
+    <pre>${JSON.stringify(data, null, 2)}</pre>
+  `;
+}
+
+async function createEntity(url, payload) {
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  });
+  return res.json();
+}
+
+async function loadData(name) {
+  const url = `${locations[name]}/${name === 'account' ? 'accounts' : name === 'loan' ? 'loans' : 'transactions'}`;
+  const res = await fetch(url);
+  const data = await res.json();
+  showOutput(`Loaded ${name} data`, data);
+}
+
+document.getElementById('create-account-btn').addEventListener('click', async () => {
+  const payload = {
+    id: document.getElementById('account-id').value.trim(),
+    name: document.getElementById('account-name').value.trim(),
+    balance: Number(document.getElementById('account-balance').value)
+  };
+  const result = await createEntity(`${locations.account}/accounts`, payload);
+  showOutput('Created account', result);
+  checkStatus();
+});
+
+document.getElementById('create-loan-btn').addEventListener('click', async () => {
+  const payload = {
+    id: document.getElementById('loan-id').value.trim(),
+    accountId: document.getElementById('loan-account-id').value.trim(),
+    amount: Number(document.getElementById('loan-amount').value),
+    termMonths: Number(document.getElementById('loan-term').value)
+  };
+  const result = await createEntity(`${locations.loan}/loans`, payload);
+  showOutput('Requested loan', result);
+});
+
+document.getElementById('create-transaction-btn').addEventListener('click', async () => {
+  const payload = {
+    id: document.getElementById('transaction-id').value.trim(),
+    accountId: document.getElementById('transaction-account-id').value.trim(),
+    type: document.getElementById('transaction-type').value,
+    amount: Number(document.getElementById('transaction-amount').value),
+    description: document.getElementById('transaction-description').value.trim()
+  };
+  const result = await createEntity(`${locations.transaction}/transactions`, payload);
+  showOutput('Recorded transaction', result);
+});
+
+document.getElementById('load-accounts').addEventListener('click', () => loadData('account'));
+
+document.getElementById('load-loans').addEventListener('click', () => loadData('loan'));
+
+document.getElementById('load-transactions').addEventListener('click', () => loadData('transaction'));
+
+checkStatus();
+setInterval(checkStatus, 5000);
+</script>
+</body>
+</html>

@@ -1,0 +1,18 @@
+{
+  "name": "simple-banking-app",
+  "private": true,
+  "version": "0.1.0",
+  "workspaces": [
+    "services/*"
+  ],
+  "scripts": {
+    "bootstrap": "npm install --workspaces",
+    "start": "npm run start:account",
+    "start:account": "npm --workspace @banking/account start",
+    "start:loan": "npm --workspace @banking/loan start",
+    "start:transaction": "npm --workspace @banking/transaction start",
+    "start:ui": "npm --workspace @banking/ui start",
+    "start:all": "docker-compose up --build",
+    "test": "echo \"No tests yet\" && exit 0"
+  }
+}
